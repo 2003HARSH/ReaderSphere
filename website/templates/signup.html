@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title%} Sign Up {%endblock%}
+{%block content %}
+
+<h1 align="center">Sign Up :</h1>
+
+<form action="{{url_for('auth.signup')}}" method="post">
+    <input type="text" name="email" placeholder="E-mail" class="form-control"><br>
+    <input type="text" name="first_name" placeholder="First Name" class="form-control"><br>
+    <input type="text" name="last_name" placeholder="Last Name" class="form-control"><br>
+    <input type="date" id="dob" name="dob" class="form-control"><br>
+    <input type="password" name="password" placeholder="Password" class="form-control"><br>
+    <input type="password" name="confirm_password" placeholder="Confirm Password" class="form-control"><br>
+    <input class="btn btn-primary" type="submit" value="Signup">
+</form>
+
+{%endblock%}
