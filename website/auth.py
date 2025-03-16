@@ -13,9 +13,12 @@ def login():
     if request.method=='GET':
         return render_template('login.html',user=current_user)
     elif request.method=='POST':
-        email=request.form.get('email')
+        email_username=request.form.get('email')
+        if email_username.endswith('@gmail.com'):
+            user=User.query.filter_by(email=email_username).first() #we get a row
+        else:
+            user=User.query.filter_by(username=email_username).first() #we get a row
         password=request.form.get('password')
-        user=User.query.filter_by(email=email).first() #we get a row
         if user:
             if check_password_hash(user.password,password):
                 flash("Logged In Successfully",category='success')
@@ -24,8 +27,8 @@ def login():
             else:
                 flash('Incorect username or password',category='error')
                 return render_template('login.html')
-        flash('No user found with this email',category='error')
-        return render_template('login.html',current_user=user)
+        flash('No user found with this email or username',category='error')
+        return render_template('login.html',user=current_user)
 
 @auth.route('/logout')
 @login_required
@@ -39,6 +42,7 @@ def signup():
         return render_template('signup.html',user=current_user)
     elif request.method=='POST':
         email=request.form.get('email')
+        username=request.form.get('username')
         first_name=request.form.get('first_name')
         last_name=request.form.get('last_name')
         dob=request.form.get('dob')
@@ -47,10 +51,11 @@ def signup():
 
         flag=True
 
-        user=User.query.filter_by(email=email).first() #we get a row
-
-        if user:
+        if User.query.filter_by(email=email).first():
             flash("Email already exists",category='error')
+            flag=False
+        if User.query.filter_by(username=username).first():
+            flash("Username already exists",category='error')
             flag=False
         if not (email.endswith('@gmail.com') and email!='@gmail.com' and email[:-10].isalnum()):
             flash("Invalid email",category='error')
@@ -71,7 +76,7 @@ def signup():
             flash("Invalid DOB",category='error')
             flag=False
         if flag:
-            user=User(email=email,first_name=first_name,last_name=last_name,password=generate_password_hash(password),dob=datetime.strptime(dob, '%Y-%m-%d').date())
+            user=User(email=email,username=username,first_name=first_name,last_name=last_name,password=generate_password_hash(password),dob=datetime.strptime(dob, '%Y-%m-%d').date())
             db.session.add(user)
             db.session.commit()
             flash("Account created",category='success')

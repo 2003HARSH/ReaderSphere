@@ -63,7 +63,7 @@
                 data.forEach(user => {
                     var listItem = document.createElement('li');
                     listItem.className = 'list-group-item friend-item';
-                    listItem.textContent = user.first_name + ' (' + user.email + ')';
+                    listItem.textContent = user.first_name + ' (@' + user.username + ')';
                     listItem.setAttribute('data-user-id', user.id);
                     listItem.addEventListener('click', function () {
                         selectUser(user.id, user.first_name);

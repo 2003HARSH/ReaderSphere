@@ -1,4 +1,4 @@
-from flask import Blueprint,render_template,request,jsonify
+from flask import Blueprint,render_template,request,jsonify,redirect,url_for
 from flask_login import login_required,current_user
 from .models import User,Message
 from .extensions import socketio,db
@@ -7,16 +7,14 @@ views=Blueprint('views',__name__)
 
 @views.route('/')
 def index():
-    return render_template('index.html',user=current_user)
-
-@views.route('/about')
-def about():
-    return render_template('about.html',user=current_user)
+    if current_user:
+        return redirect(url_for('views.profile'))
+    return(redirect(url_for('auth.login')))
 
 @views.route('/profile')
 @login_required
 def profile():
-    return render_template('profile.html',user=current_user,friends=User.query.all()) #temporary
+    return render_template('profile.html',user=current_user,people=User.query.all()) #temporary
 
 @views.route('/messages')
 @login_required
@@ -32,7 +30,7 @@ def get_users():
     # Convert users to a list of dictionaries
     users_data = [{
         'id': user.id,
-        'email': user.email,
+        'username':user.username,
         'first_name': user.first_name
     } for user in users]
 
