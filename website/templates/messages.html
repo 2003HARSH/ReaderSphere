@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %} Messages {% endblock %}
+
+{% block content %}
+<div class="message-box">
+    <h1>Welcome!! {{ user.first_name }}</h1>
+
+    <div id="messages" style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll;">
+        {% for message in messages %}
+            <div>
+                <strong>{{ message.firstname }}:</strong> {{ message.message }} <em>({{ message.timestamp }})</em>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="inputs">
+        <input type="text" name="message" id="message" placeholder="Type your message here" >
+        <button type="button" name="send" id="send-btn" onclick="send_message()" class="btn btn-primary">Send</button>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var socket = io(); 
+
+    socket.on('connect', function () {
+        console.log('Connected to the server');
+    });
+
+    socket.on('disconnect', function () {
+        console.log('Disconnected from the server');
+    });
+
+    function send_message() {
+        var message = document.getElementById('message').value;
+        console.log(message); 
+        if (message.trim() !== '') {
+            socket.send(message); 
+            document.getElementById('message').value = ''; 
+        }
+    }
+
+    socket.on('message', function (data) {
+        var messageElement = document.createElement('div');
+        messageElement.innerHTML = '<strong>' + data.firstname + ':</strong> ' + data.message + ' <em>(' + data.timestamp + ')</em>';
+        document.getElementById('messages').appendChild(messageElement);
+    });
+</script>
+{% endblock %}
