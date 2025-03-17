@@ -1,12 +1,25 @@
 from flask import Blueprint,render_template,request,flash,redirect,url_for
-import string
+import os
 from .models import User
 from .extensions import db
 from datetime import datetime
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_required,login_user,logout_user,current_user
+from werkzeug.utils import secure_filename
 
 auth=Blueprint('auth',__name__)
+
+
+UPLOAD_FOLDER = 'website/static/profile_pics'  # Store uploaded images
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+# Ensure the upload directory exists
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'avif'}
+
 
 @auth.route('/login',methods=['GET','POST'])
 def login():
@@ -49,6 +62,15 @@ def signup():
         password=request.form.get('password')
         confirm_password=request.form.get('confirm_password')
 
+        # Handle profile picture upload
+        file = request.files['profile_pic']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(file_path)
+        else:
+            filename = 'default.avif'  # Use a default profile picture if none uploaded
+
         flag=True
 
         if User.query.filter_by(email=email).first():
@@ -76,7 +98,7 @@ def signup():
             flash("Invalid DOB",category='error')
             flag=False
         if flag:
-            user=User(email=email,username=username,first_name=first_name,last_name=last_name,password=generate_password_hash(password),dob=datetime.strptime(dob, '%Y-%m-%d').date())
+            user=User(email=email,username=username,first_name=first_name,last_name=last_name,password=generate_password_hash(password),dob=datetime.strptime(dob, '%Y-%m-%d').date(),profile_pic=filename)
             db.session.add(user)
             db.session.commit()
             flash("Account created",category='success')

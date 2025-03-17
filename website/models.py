@@ -9,6 +9,7 @@ class User(db.Model, UserMixin):
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
     dob = db.Column(db.Date, nullable=False)
+    profile_pic = db.Column(db.String(120))
     password = db.Column(db.String(255), nullable=False)
 
 class Message(db.Model):

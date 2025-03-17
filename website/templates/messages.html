@@ -62,13 +62,33 @@
                 var userList = document.getElementById('user-list');
                 data.forEach(user => {
                     var listItem = document.createElement('li');
-                    listItem.className = 'list-group-item friend-item';
-                    listItem.textContent = user.first_name + ' (@' + user.username + ')';
+                    listItem.className = 'list-group-item friend-item d-flex align-items-center';
                     listItem.setAttribute('data-user-id', user.id);
+
+                    // Create the profile picture element
+                    var profilePic = document.createElement('img');
+                    profilePic.src = "{{ url_for('static', filename='profile_pics/') }}" + user.profile_pic;
+                    profilePic.alt = "Profile Picture";
+                    profilePic.className = "rounded-circle border";
+                    profilePic.style.width = "40px";  // Adjust the size
+                    profilePic.style.height = "40px";
+                    profilePic.style.objectFit = "cover";
+                    profilePic.style.marginRight = "10px";  // Add spacing
+
+                    // Create the text element for the user's name and username
+                    var userText = document.createElement('span');
+                    userText.textContent = user.first_name + ' (@' + user.username + ')';
+
+                    // Add click event to the list item
                     listItem.addEventListener('click', function () {
                         selectUser(user.id, user.first_name);
                     });
+
+                    // Append the profile pic and text to the list item
+                    listItem.appendChild(profilePic);
+                    listItem.appendChild(userText);
                     userList.appendChild(listItem);
+
                 });
             })
             .catch(error => console.error('Error fetching users:', error));

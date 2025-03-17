@@ -7,7 +7,7 @@
     <div class="card shadow-lg p-4" style="width: 400px;">
         <div class="card-body">
             <h2 class="text-center mb-4 text-primary">Sign Up</h2>
-            <form action="{{ url_for('auth.signup') }}" method="post">
+            <form action="{{ url_for('auth.signup') }}" method="post" enctype="multipart/form-data">
                 <div class="mb-3">
                     <label for="email" class="form-label">Email</label>
                     <input type="text" name="email" id="email" class="form-control" placeholder="Enter your email" required>
@@ -35,6 +35,10 @@
                 <div class="mb-3">
                     <label for="confirm_password" class="form-label">Confirm Password</label>
                     <input type="password" name="confirm_password" id="confirm_password" class="form-control" placeholder="Confirm your password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="profile_pic" class="form-label">Profile Picture</label>
+                    <input type="file" name="profile_pic" id="profile_pic" class="form-control" accept="image/*" required>
                 </div>
                 <div class="d-grid">
                     <button type="submit" class="btn btn-primary">Sign Up</button>

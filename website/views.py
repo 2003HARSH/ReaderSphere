@@ -31,7 +31,8 @@ def get_users():
     users_data = [{
         'id': user.id,
         'username':user.username,
-        'first_name': user.first_name
+        'first_name': user.first_name,
+        'profile_pic':user.profile_pic
     } for user in users]
 
     return jsonify(users_data)
