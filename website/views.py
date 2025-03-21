@@ -11,10 +11,21 @@ def index():
         return redirect(url_for('views.profile'))
     return(redirect(url_for('auth.login')))
 
-@views.route('/profile')
+@views.route('<username>')
 @login_required
-def profile():
-    return render_template('profile.html',user=current_user,people=User.query.all()) #temporary
+def profile(username):
+    if username != current_user.username:
+        user=User.query.filter_by(username=username).first()
+        people=User.query.filter(User.id!=user.id).all()
+        return render_template('profile.html',user=user,people=people,edit=False) 
+    else:
+        return redirect(url_for('views.my_profile'))
+    
+@views.route('/my_profile')
+@login_required
+def my_profile():
+    people=User.query.filter(User.id!=current_user.id).all()
+    return render_template('profile.html',user=current_user,people=people,edit=True)
 
 @views.route('/messages')
 @login_required
