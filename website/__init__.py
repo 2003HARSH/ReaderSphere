@@ -2,6 +2,7 @@ from flask import Flask
 from os import path
 import os
 from .sockets import configure_socketio
+from flask_migrate import Migrate
 
 def create_app():
     from .extensions import socketio,db,login_manager,DB_NAME
@@ -11,6 +12,7 @@ def create_app():
     db.init_app(app)
 
     socketio.init_app(app, cors_allowed_origins="*")
+    migrate = Migrate(app, db)
 
     from .views import views
     from .auth import auth

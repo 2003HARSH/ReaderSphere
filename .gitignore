@@ -3,3 +3,4 @@ __pycache__
 instance
 .env
 website/static/profile_pics
+migrations

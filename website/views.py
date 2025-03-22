@@ -1,7 +1,6 @@
 from flask import Blueprint,render_template,request,jsonify,redirect,url_for
 from flask_login import login_required,current_user
 from .models import User,Message
-from .extensions import socketio,db
 
 views=Blueprint('views',__name__)
 
@@ -66,4 +65,5 @@ def get_messages(receiver_id):
     } for message in messages]
 
     return jsonify(messages_data)
+
 

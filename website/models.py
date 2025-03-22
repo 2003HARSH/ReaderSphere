@@ -11,6 +11,7 @@ class User(db.Model, UserMixin):
     dob = db.Column(db.Date, nullable=False)
     profile_pic = db.Column(db.String(120))
     password = db.Column(db.String(255), nullable=False)
+    bio = db.Column(db.Text, nullable=True)  
 
 class Message(db.Model):
     id=db.Column(db.Integer,primary_key=True)

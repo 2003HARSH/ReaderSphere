@@ -106,5 +106,38 @@ def signup():
             return redirect(url_for('views.profile'))
 
         return render_template('signup.html',user=current_user)
+    
+@auth.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    if request.method == 'POST':
+        new_username = request.form.get('username')
+        new_bio = request.form.get('bio')
+        new_password = request.form.get('password')
+        conf_new_password=request.form.get('conf_password')
+        file = request.files['profile_pic']
+        dob=request.form.get('dob')
+
+        if new_username:
+            current_user.username = new_username
+        if new_bio:
+            current_user.bio = new_bio  
+        if new_password and conf_new_password and new_password==conf_new_password:
+            current_user.password = generate_password_hash(new_password)
+        if dob:
+            current_user.dob=datetime.strptime(dob, '%Y-%m-%d').date()
+
+
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(file_path)
+            current_user.profile_pic=filename
+
+        db.session.commit()
+        flash('Profile updated successfully!', category='success')
+        return redirect(url_for('views.profile', username=current_user.username))
+
+    return render_template('edit_profile.html', user=current_user)
         
         
