@@ -28,7 +28,7 @@ def create_app():
     def load_user(id):
         return models.User.query.get(int(id))
 
-    if not path.exists("website/" + DB_NAME):
+    if not path.exists("backend/" + DB_NAME):
         with app.app_context():
             db.create_all()
             print("Database created")

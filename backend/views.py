@@ -7,7 +7,7 @@ views=Blueprint('views',__name__)
 @views.route('/')
 def index():
     if current_user:
-        return redirect(url_for('views.profile'))
+        return redirect(url_for('views.my_profile'))
     return(redirect(url_for('auth.login')))
 
 @views.route('<username>')
