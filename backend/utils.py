@@ -34,7 +34,7 @@ def login_util(email_username,password,frontend):
             return redirect(url_for('views.profile',username=user.username))
         else:
             flash('Incorect username or password',category='error')
-            return render_template('login.html')        
+            return render_template('login.html',user=current_user)        
     
     if frontend=='api':
         if is_authenticated :
