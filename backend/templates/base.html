@@ -5,16 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yapper</title>
     <link rel="icon" type="image/x-icon" href="/static/icons/favicon.png">
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" crossorigin="anonymous"></script>
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-            <!-- Brand/Logo -->
             {% if user.is_authenticated %}
             <img src="{{ url_for('static', filename='profile_pics/' + user.profile_pic) }}"  alt="Profile Picture" class="rounded-circle img-fluid border" style="width: 50px; height: 50px; object-fit: cover;">
             <a class="navbar-brand" href="#">ReaderSphere/@{{user.username}}</a>
@@ -22,25 +19,16 @@
             <a class="navbar-brand" href="#">ReaderSphere</a>
             {% endif %}
 
-            <!-- Toggle Button for Mobile -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <!-- Navbar Links -->
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                     {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('views.my_profile')}}">Profile</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/messages">Messages</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/logout">Logout</a>
-                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{{url_for('views.my_profile')}}">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/messages">Messages</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
                     {% endif %}
                 </ul>
             </div>
@@ -48,10 +36,49 @@
     </nav>
 
     <!-- Main Content -->
-        {% block content %}{% endblock %}
+    {% block content %}{% endblock %}
 
-    <!-- Bootstrap JS and dependencies -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+
+    <!-- Socket.IO Scripts -->
+    {% if user.is_authenticated %}
+    <script>
+        const socket = io();
+
+        socket.on('connect', () => {
+            console.log('Connected to Socket.IO server');
+        });
+
+        socket.on('receive_friend_request', (data) => {
+            alert(`You received a friend request from ${data.sender_name}`);
+            location.reload();
+        });
+
+        socket.on('friend_request_response', (data) => {
+            alert(`${data.receiver_name} ${data.status} your friend request`);
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.send-friend-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const receiverId = button.getAttribute('data-id');
+                    socket.emit('send_friend_request', { receiver_id: receiverId });
+                    button.disabled = true;
+                    button.innerText = "Request Sent";
+                });
+            });
+        });
+
+        function respondRequest(requestId, action) {
+            socket.emit('respond_friend_request', {
+                request_id: requestId,
+                action: action
+            });
+            location.reload();
+        }
+    </script>
+    {% endif %}
 </body>
 </html>

@@ -11,8 +11,8 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
     db.init_app(app)
 
-    socketio.init_app(app, cors_allowed_origins="*")
     migrate = Migrate(app, db)
+    socketio.init_app(app, cors_allowed_origins="*")
 
     from .views import views
     from .auth import auth

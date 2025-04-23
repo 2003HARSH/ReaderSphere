@@ -1,6 +1,6 @@
 from flask import Blueprint,render_template,request,jsonify,redirect,url_for
 from flask_login import login_required,current_user
-from .models import User,Message
+from .models import User,Message,FriendRequest
 
 views=Blueprint('views',__name__)
 
@@ -24,7 +24,9 @@ def profile(username):
 @login_required
 def my_profile():
     people=User.query.filter(User.id!=current_user.id).all()
-    return render_template('profile.html',user=current_user,people=people,edit=True)
+    pending_requests = FriendRequest.query.filter_by(receiver_id=current_user.id, status='pending').all()
+    non_friends = User.query.filter(User.id != current_user.id).filter(~User.id.in_([friend.id for friend in current_user.friends])).all()
+    return render_template('profile.html', user=current_user, people=non_friends, edit=True, pending_requests=pending_requests)
 
 @views.route('/messages')
 @login_required
@@ -35,7 +37,7 @@ def messages():
 @login_required
 def get_users():
     # Fetch all users except the current user
-    users = User.query.filter(User.id != current_user.id).all()
+    users = current_user.friends
 
     # Convert users to a list of dictionaries
     users_data = [{
@@ -65,5 +67,3 @@ def get_messages(receiver_id):
     } for message in messages]
 
     return jsonify(messages_data)
-
-
