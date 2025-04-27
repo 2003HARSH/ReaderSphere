@@ -38,9 +38,10 @@ def login_util(email_username,password,frontend):
     
     if frontend=='api':
         if is_authenticated :
-            return jsonify({'status': 'success', 'message': 'Login successful'}), 200
+            session_id = request.cookies.get('session')  
+            return jsonify({'status': True,'session_id':session_id, 'message': 'Login successful'}), 200
         else:
-            return jsonify({'status': 'error', 'message': 'Invalid Credentials'}), 401
+            return jsonify({'status': False, 'message': 'Invalid Credentials'}), 401
 
 def signup_util(request,frontend):
 
@@ -96,7 +97,8 @@ def signup_util(request,frontend):
             flash("Account created",category='success')
             return redirect(url_for('views.my_profile'))
         elif frontend=='api':
-            return jsonify({'status': 'success', 'message': 'Login successful'}), 200
+            session_id = request.cookies.get('session')  
+            return jsonify({'status': 'success', 'session_id':session_id,'message': 'Login successful'}), 200
     else:
         if frontend=='web':
             for i in msg:
