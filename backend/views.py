@@ -1,6 +1,8 @@
 from flask import Blueprint,render_template,request,jsonify,redirect,url_for
 from flask_login import login_required,current_user
 from .models import User,Message,FriendRequest
+import requests
+from bs4 import BeautifulSoup
 
 views=Blueprint('views',__name__)
 
@@ -15,8 +17,10 @@ def index():
 def profile(username):
     if username != current_user.username:
         user=User.query.filter_by(username=username).first()
-        people=User.query.filter(User.id!=user.id).all()
-        return render_template('profile.html',user=user,people=people,edit=False) 
+        is_friend = False
+        if current_user in user.friends:
+            is_friend = True
+        return render_template('profile.html',user=user,is_friend=is_friend,edit=False) 
     else:
         return redirect(url_for('views.my_profile'))
     
@@ -115,3 +119,66 @@ def get_messages(receiver_id):
     } for message in messages]
 
     return jsonify(messages_data)
+
+
+@views.route('/groups')
+@login_required
+def groups():
+    my_groups = current_user.groups
+    return render_template('groups.html', user=current_user,groups=my_groups)
+
+@views.route('/books')
+@login_required
+def books():
+    return render_template('books.html',user=current_user)
+
+@views.route('/book/<title>')
+@login_required
+def book(title):
+    url = f"https://www.googleapis.com/books/v1/volumes/{title}"
+    res = requests.get(url)
+    data = res.json()
+
+    info = data.get('volumeInfo', {})
+    Title= info.get("title")
+    Authors=info.get("authors")
+    Publisher=info.get("publisher")
+    Category=info.get("categories")
+    pageCount=info.get("pageCount")
+    Description=info.get("description")
+    Description=BeautifulSoup(Description, "html.parser").get_text()
+    Thumbnail=info.get("imageLinks", {}).get("thumbnail")
+    return render_template("book_detail.html",user=current_user,
+                           Title=Title,
+                           Authors=Authors,
+                           Publisher=Publisher,
+                           Category=Category,
+                           pageCount=pageCount,
+                           Description=Description,
+                           Thumbnail=Thumbnail)
+
+@views.route('/book/search/<query>')
+@login_required
+def book_search(query):
+    url = f"https://www.googleapis.com/books/v1/volumes?q={query}"
+    res = requests.get(url)
+    data = res.json()
+
+    for book in data['items'][:1]:
+        info = book['volumeInfo']
+        Title= info.get("title")
+        Authors=info.get("authors")
+        Publisher=info.get("publisher")
+        Category=info.get("categories")
+        pageCount=info.get("pageCount")
+        Description=info.get("description")
+        Description=BeautifulSoup(Description, "html.parser").get_text()
+        Thumbnail=info.get("imageLinks", {}).get("thumbnail")
+    return render_template("book_detail.html",user=current_user,
+                           Title=Title,
+                           Authors=Authors,
+                           Publisher=Publisher,
+                           Category=Category,
+                           pageCount=pageCount,
+                           Description=Description,
+                           Thumbnail=Thumbnail)

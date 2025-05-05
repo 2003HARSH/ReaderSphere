@@ -55,3 +55,26 @@ class Message(db.Model):
     content=db.Column(db.String(1000),nullable=False)
     timestamp=db.Column(db.DateTime,default=datetime.datetime.utcnow)
     seen=db.Column(db.Boolean,default=False)
+
+
+group_members = db.Table('group_members',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('group_id', db.Integer, db.ForeignKey('group.id'))
+)
+
+class Group(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_by = db.relationship('User', backref='created_groups')
+    members = db.relationship('User', secondary=group_members, backref='groups')
+
+class GroupMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.String(1000), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id'))
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    group = db.relationship('Group', backref='messages')
+    sender = db.relationship('User')

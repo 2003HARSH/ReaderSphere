@@ -9,17 +9,21 @@
         <div class="col-md-4">
             <div class="card text-center shadow-lg">
                 <div class="card-body">
-                    <img src="{{ url_for('static', filename='profile_pics/' + user.profile_pic) }}"  alt="Profile Picture" class="rounded-circle img-fluid border" style="width: 150px; height: 150px; object-fit: cover;">
+                    <img src="{{ url_for('static', filename='profile_pics/' + user.profile_pic) }}"
+                        alt="Profile Picture" class="rounded-circle img-fluid border"
+                        style="width: 150px; height: 150px; object-fit: cover;">
                     <h3 class="mt-3">{{ user.first_name }} {{ user.last_name }}</h3>
                     <p class="text-muted">@{{ user.username }}</p>
                     {%if user.bio %}
                     <p class="text-muted">{{ user.bio }}</p>
                     {%endif %}
                     {% if edit== True %}
-                    <a href="{{ url_for('auth.edit_profile')}}" class="btn btn-outline-primary btn-sm mt-2">Edit Profile</a>
+                    <a href="{{ url_for('auth.edit_profile')}}" class="btn btn-outline-primary btn-sm mt-2">Edit
+                        Profile</a>
                     {%endif%}
-                    {% if edit == False %}
-                    <button class="btn btn-outline-primary btn-sm send-friend-btn" data-id="{{ user.id }}">Add Friend</button>
+                    {% if edit == False and not is_friend%}
+                    <button class="btn btn-outline-primary btn-sm send-friend-btn" data-id="{{ user.id }}">Add
+                        Friend</button>
                     {% endif %}
                 </div>
             </div>
@@ -46,20 +50,49 @@
                 </div>
                 <div class="card-body">
                     {% for req in pending_requests %}
-                        {% if req.status == 'pending' %}
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span>{{ req.sender.first_name }} (@{{ req.sender.username }})</span>
-                            <div>
-                                <button class="btn btn-success btn-sm me-1" onclick="respondRequest(`{{ req.id }}`, 'accept')">Accept</button>
-                                <button class="btn btn-danger btn-sm" onclick="respondRequest(`{{ req.id }}`, 'reject')">Reject</button>
-                            </div>
+                    {% if req.status == 'pending' %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ req.sender.first_name }} (@{{ req.sender.username }})</span>
+                        <div>
+                            <button class="btn btn-success btn-sm me-1"
+                                onclick="respondRequest(`{{ req.id }}`, 'accept')">Accept</button>
+                            <button class="btn btn-danger btn-sm"
+                                onclick="respondRequest(`{{ req.id }}`, 'reject')">Reject</button>
                         </div>
-                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Friends List -->
+             {% if edit==True %}
+            <div class="card shadow-lg mt-3" id="friends-card">
+                <div class="card-header bg-success text-white">
+                    <h5>Friends</h5>
+                </div>
+                <div class="card-body" id="friends-list">
+                    {% for friend in user.friends %}
+                    <a id="profile_link" href="{{url_for('views.profile',username=friend.username)}}">
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="{{ url_for('static', filename='profile_pics/' + friend.profile_pic) }}"
+                            class="rounded-circle border"
+                            style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
+                        <div>
+                            <strong>{{ friend.first_name }} {{ friend.last_name }}</strong><br>
+                            <small class="text-muted">@{{ friend.username }}</small>
+                        </div>
+                    </div>
+                    </a>
+                    {% else %}
+                    <p class="text-muted">No friends yet.</p>
                     {% endfor %}
                 </div>
             </div>
             {% endif %}
         </div>
+
 
 
         <!-- Right Side: People List -->
@@ -72,14 +105,21 @@
                 <ul class="list-group list-group-flush">
                     {% for person in people %}
                     <li class="list-group-item d-flex align-items-center justify-content-between">
-                        <a id="profile_link" href="{{url_for('views.profile',username=person.username)}}" class="d-flex align-items-center">
-                            <img src="{{ url_for('static', filename='profile_pics/' + person.profile_pic) }}" class="rounded-circle border" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
+                        <a id="profile_link" href="{{url_for('views.profile',username=person.username)}}"
+                            class="d-flex align-items-center">
+                            <img src="{{ url_for('static', filename='profile_pics/' + person.profile_pic) }}"
+                                class="rounded-circle border"
+                                style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
                             <div>
                                 <strong>{{ person.first_name }} {{ person.last_name }}</strong>
                                 <br> <small class="text-muted">@{{ person.username }}</small>
                             </div>
                         </a>
-                        <button class="btn btn-outline-primary btn-sm send-friend-btn" data-id="{{ person.id }}">Add Friend</button>
+                        <button class="btn btn-outline-primary btn-sm send-friend-btn" 
+                        data-id="{{ person.id }}"
+                        data-username="{{ person.username }}">
+                    Add Friend
+                </button>
                     </li>
                     {% endfor %}
                 </ul>
@@ -115,4 +155,5 @@
         flex-grow: 1;
     }
 </style>
+
 {% endblock %}

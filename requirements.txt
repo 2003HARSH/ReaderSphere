@@ -4,3 +4,5 @@ flask-migrate
 flask-login
 python-dotenv
 flask-socketio
+requests
+beautifulsoup4

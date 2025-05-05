@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %} Login {% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<div class="container mt-4">
+    <!-- Search Bar -->
+    <div class="mb-4">
+        <input type="text" id="searchInput" placeholder="Search for books..." class="form-control">
+    </div>
+
+    <div class="scroll-container">
+        <div class="book-row" id="bookRow"></div>
+    </div>
+
+
+    <script>
+        // List of queries
+        const queries = ["Chetan Bhagat", "Harry Potter", "Java Programming", "Machine Learning", "Science Fiction", "OOps", "Python Programming", "Machine Learning", "NLP", "ravinder singh", "durjoy dutta", "arundhati roy"];
+
+        async function fetchBooks(query) {
+            const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            const bookRow = document.getElementById("bookRow");
+
+            // Add a section for each query
+            const section = document.createElement("div");
+            section.classList.add("query-section");
+
+            data.items?.forEach(book => {
+                const info = book.volumeInfo;
+                const title = info.title || "Untitled";
+                const thumbnail = info.imageLinks?.thumbnail || "https://via.placeholder.com/150x220";
+
+                const card = document.createElement("div");
+                card.className = "book-card";
+                card.innerHTML = `
+            <a href="/book/${book.id}" style="text-decoration: none; color: inherit; display: block;">
+              <div class="book-card">
+                <img src="${thumbnail}" alt="${title}">
+                <p class="title">${title}</p>
+              </div>
+            </a>
+            `;
+
+                section.appendChild(card);
+            });
+
+            // Append the section to the book row
+            bookRow.appendChild(section);
+        }
+
+        // Fetch books for each query in the list
+        queries.forEach(query => {
+            fetchBooks(query);
+        });
+
+        document.getElementById("searchInput").addEventListener("keypress", function (e) {
+            if (e.key === "Enter") {
+                const keyword = this.value.trim();
+                if (keyword) {
+                    window.location.href = `/book/search/${keyword}`;
+                }
+            }
+        });
+    </script>
+
+    <style>
+        .scroll-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 20px;
+            margin-top: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Book Row */
+        .book-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        /* Book Card */
+        .book-card {
+            flex: 0 0 auto;
+            width: 150px;
+            background-color: #fff;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .book-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Book Image */
+        .book-card img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        /* Book Title */
+        .book-card .title {
+            font-size: 14px;
+            padding: 10px;
+            color: #333;
+            font-weight: bold;
+            height: 60px;
+            overflow: hidden;
+        }
+    </style>
+
+
+    {% endblock %}
