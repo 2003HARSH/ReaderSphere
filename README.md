@@ -45,6 +45,18 @@
 
 - 🧑‍🤝‍🧑 **Group Chats** *(in development)*  
   Interest-based group chats to discuss genres, authors, and more.
+  
+---
+
+### ⚙️ Architecture
+
+ReaderSphere serves **both as a complete web application** *and* **as a backend API layer** — ideal for:
+
+- 🖥️ **Web Frontend**
+- 📱 **Mobile apps (Android/iOS)**
+- 💻 **Desktop clients**
+
+All essential features (auth, book search, messaging, profile edits, etc.) are exposed via modular API endpoints, making it plug-and-play for other frontends.
 
 ---
 
