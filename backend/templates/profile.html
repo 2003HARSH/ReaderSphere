@@ -9,7 +9,7 @@
         <div class="col-md-4">
             <div class="card text-center shadow-lg">
                 <div class="card-body">
-                    <img src="{{ url_for('static', filename='profile_pics/' + user.profile_pic) }}"
+                    <img src="{{ user.profile_pic }}"
                         alt="Profile Picture" class="rounded-circle img-fluid border"
                         style="width: 150px; height: 150px; object-fit: cover;">
                     <h3 class="mt-3">{{ user.first_name }} {{ user.last_name }}</h3>
@@ -76,7 +76,7 @@
                     {% for friend in user.friends %}
                     <a id="profile_link" href="{{url_for('views.profile',username=friend.username)}}">
                     <div class="d-flex align-items-center mb-2">
-                        <img src="{{ url_for('static', filename='profile_pics/' + friend.profile_pic) }}"
+                        <img src="{{ friend.profile_pic }}"
                             class="rounded-circle border"
                             style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
                         <div>
@@ -107,7 +107,7 @@
                     <li class="list-group-item d-flex align-items-center justify-content-between">
                         <a id="profile_link" href="{{url_for('views.profile',username=person.username)}}"
                             class="d-flex align-items-center">
-                            <img src="{{ url_for('static', filename='profile_pics/' + person.profile_pic) }}"
+                            <img src="{{ person.profile_pic }}"
                                 class="rounded-circle border"
                                 style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
                             <div>

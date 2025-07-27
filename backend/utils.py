@@ -6,16 +6,48 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash,check_password_hash
 from flask_login import login_required,login_user,logout_user,current_user
 from werkzeug.utils import secure_filename
+import boto3
+from botocore.exceptions import NoCredentialsError
+
+# --- S3 Configuration ---
+S3_BUCKET = os.getenv('S3_BUCKET_NAME')
+S3_LOCATION = f'https://{S3_BUCKET}.s3.amazonaws.com/'
+S3_ACCESS_KEY = os.getenv('AWS_ACCESS_KEY_ID')
+S3_SECRET_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+
+def upload_to_s3(file, bucket_name, acl="public-read"):
+    """
+    Uploads a file object to an S3 bucket.
+    """
+    try:
+        s3 = boto3.client(
+           "s3",
+           aws_access_key_id=S3_ACCESS_KEY,
+           aws_secret_access_key=S3_SECRET_KEY
+        )
+        s3.upload_fileobj(
+            file,
+            bucket_name,
+            file.filename,
+            ExtraArgs={
+                "ACL": acl,
+                "ContentType": file.content_type
+            }
+        )
+    except FileNotFoundError:
+        print("The file was not found")
+        return None
+    except NoCredentialsError:
+        print("Credentials not available")
+        return None
+    return f"{S3_LOCATION}{file.filename}"
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'avif'}
 
-UPLOAD_FOLDER = 'backend/static/profile_pics'  
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
-# Ensure the upload directory exists
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
 
 def login_util(email_username,password,frontend):    
     is_authenticated=False
@@ -54,15 +86,18 @@ def signup_util(request,frontend):
     confirm_password=request.form.get('confirm_password')
     file = request.files.get('profile_pic')
 
+    DEFAULT_PROFILE_PIC_URL = os.getenv('DEFAULT_PROFILE_PIC_URL', 'https://readersphere.s3.ap-south-1.amazonaws.com/default.avif')
+    profile_pic_url = DEFAULT_PROFILE_PIC_URL # Use the full URL as the default
+
     if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(file_path)
-    else:
-        filename = 'default.avif'  
+        file.filename = secure_filename(file.filename)
+        uploaded_url = upload_to_s3(file, S3_BUCKET)
+        if uploaded_url:
+              profile_pic_url = uploaded_url # Overwrite default only if upload succeeds
 
     msg=[]
     flag=True
+    # --- (Your validation logic for email, username, etc. remains here) ---
     if User.query.filter_by(email=email).first():
         msg.append("Email already exists")
         flag=False
@@ -89,7 +124,7 @@ def signup_util(request,frontend):
         flag=False
         
     if flag:
-        user=User(email=email,username=username,first_name=first_name,last_name=last_name,password=generate_password_hash(password),dob=datetime.strptime(dob, '%Y-%m-%d').date(),profile_pic=filename)
+        user=User(email=email,username=username,first_name=first_name,last_name=last_name,password=generate_password_hash(password),dob=datetime.strptime(dob, '%Y-%m-%d').date(),profile_pic=profile_pic_url)
         db.session.add(user)
         db.session.commit()
         login_user(user,remember=True)
@@ -106,7 +141,7 @@ def signup_util(request,frontend):
             return render_template('signup.html',user=current_user)
         elif frontend=='api':
             return jsonify({'status': 'error', 'message': 'Invalid Input'}), 401
-
+        
 def edit_profile_util(request,frontend):
     new_username = request.form.get('username')
     new_bio = request.form.get('bio')
@@ -125,11 +160,10 @@ def edit_profile_util(request,frontend):
         current_user.dob=datetime.strptime(dob, '%Y-%m-%d').date()
 
     if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
-        file.save(file_path)
-        current_user.profile_pic=filename
-    db.session.commit()
+        file.filename = secure_filename(file.filename)
+        output_url = upload_to_s3(file, S3_BUCKET)
+        if output_url:
+            current_user.profile_pic = output_url 
 
     if frontend=='web':
         flash('Profile updated successfully!', category='success')

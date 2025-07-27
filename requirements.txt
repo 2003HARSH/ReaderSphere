@@ -6,3 +6,6 @@ python-dotenv
 flask-socketio
 requests
 beautifulsoup4
+psycopg2-binary
+flask_cors
+boto3

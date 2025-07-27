@@ -67,7 +67,7 @@
 
                     // Create the profile picture element
                     var profilePic = document.createElement('img');
-                    profilePic.src = "{{ url_for('static', filename='profile_pics/') }}" + user.profile_pic;
+                    profilePic.src = user.profile_pic;
                     profilePic.alt = "Profile Picture";
                     profilePic.className = "rounded-circle border";
                     profilePic.style.width = "40px";  // Adjust the size

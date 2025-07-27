@@ -15,14 +15,6 @@ def login():
         password=request.form.get('password')
         return login_util(email_username,password,'web')
     
-@auth.route('/api/login',methods=['POST'])
-def api_login():
-    data = request.get_json()
-    email_username = data.get('username')
-    password = data.get('password')
-    return login_util(email_username,password,'api')
-
-
 @auth.route('/logout')
 @login_required
 def logout():
@@ -36,12 +28,7 @@ def signup():
     
     elif request.method=='POST':
         return signup_util(request,frontend='web')
-            
-@auth.route('/api/signup',methods=['POST'])
-def api_signup():
-        return signup_util(request,frontend='api')
-
-            
+   
 @auth.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
 def edit_profile():
@@ -51,8 +38,3 @@ def edit_profile():
     elif request.method=='POST':
         return edit_profile_util(request,frontend='web')
             
-@auth.route('api/edit_profile', methods=['GET', 'POST'])
-@login_required
-def api_edit_profile():
-    if request:
-        return edit_profile_util(request,frontend='web')
