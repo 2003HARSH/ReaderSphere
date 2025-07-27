@@ -14,6 +14,8 @@ S3_BUCKET = os.getenv('S3_BUCKET_NAME')
 S3_LOCATION = f'https://{S3_BUCKET}.s3.amazonaws.com/'
 S3_ACCESS_KEY = os.getenv('AWS_ACCESS_KEY_ID')
 S3_SECRET_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+DEFAULT_PROFILE_PIC_URL = os.getenv('DEFAULT_PROFILE_PIC_URL')
+
 
 def upload_to_s3(file, bucket_name, acl="public-read"):
     """
@@ -86,7 +88,6 @@ def signup_util(request,frontend):
     confirm_password=request.form.get('confirm_password')
     file = request.files.get('profile_pic')
 
-    DEFAULT_PROFILE_PIC_URL = os.getenv('DEFAULT_PROFILE_PIC_URL', 'https://readersphere.s3.ap-south-1.amazonaws.com/default.avif')
     profile_pic_url = DEFAULT_PROFILE_PIC_URL # Use the full URL as the default
 
     if file and allowed_file(file.filename):
@@ -164,6 +165,8 @@ def edit_profile_util(request,frontend):
         output_url = upload_to_s3(file, S3_BUCKET)
         if output_url:
             current_user.profile_pic = output_url 
+
+    db.session.commit()
 
     if frontend=='web':
         flash('Profile updated successfully!', category='success')

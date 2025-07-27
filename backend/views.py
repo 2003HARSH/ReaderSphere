@@ -1,4 +1,4 @@
-from flask import Blueprint,render_template,request,jsonify,redirect,url_for
+from flask import Blueprint,render_template,request,jsonify,redirect,url_for,abort
 from flask_login import login_required,current_user
 from .models import User,Message,FriendRequest
 import requests
@@ -12,15 +12,19 @@ def index():
         return redirect(url_for('views.my_profile'))
     return(redirect(url_for('auth.login')))
 
-@views.route('<username>')
+@views.route('/<username>')
 @login_required
 def profile(username):
     if username != current_user.username:
         user=User.query.filter_by(username=username).first()
+
+        if user is None:
+            abort(404) 
+
         is_friend = False
-        if current_user in user.friends:
+        if user in current_user.friends:
             is_friend = True
-        return render_template('profile.html',user=user,is_friend=is_friend,edit=False) 
+        return render_template('profile.html',user=user,is_friend=is_friend,edit=False)
     else:
         return redirect(url_for('views.my_profile'))
     
