@@ -11,3 +11,4 @@ flask_cors
 boto3
 gunicorn
 eventlet
+pytest
