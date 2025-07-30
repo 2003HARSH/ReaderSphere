@@ -78,12 +78,6 @@ def get_messages(receiver_id):
     return jsonify(messages_data)
 
 
-@views.route('/groups')
-@login_required
-def groups():
-    my_groups = current_user.groups
-    return render_template('groups.html', user=current_user,groups=my_groups)
-
 @views.route('/books')
 @login_required
 def books():
@@ -139,3 +133,24 @@ def book_search(query):
                            pageCount=pageCount,
                            Description=Description,
                            Thumbnail=Thumbnail)
+
+
+@views.route('/groups')
+@login_required
+def groups():
+    my_groups = current_user.groups
+    
+    # Create a dictionary to hold non-member friends for each group
+    non_member_friends_by_group = {}
+    for group in my_groups:
+        if group.created_by_id == current_user.id:
+            group_members_ids = {member.id for member in group.members}
+            non_member_friends = [
+                friend for friend in current_user.friends if friend.id not in group_members_ids
+            ]
+            non_member_friends_by_group[group.id] = non_member_friends
+
+    return render_template('groups.html', 
+                           user=current_user, 
+                           groups=my_groups, 
+                           non_member_friends_by_group=non_member_friends_by_group)

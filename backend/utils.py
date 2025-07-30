@@ -145,6 +145,8 @@ def signup_util(request,frontend):
         
 def edit_profile_util(request,frontend):
     new_username = request.form.get('username')
+    first_name=request.form.get('first_name')
+    last_name=request.form.get('last_name')
     new_bio = request.form.get('bio')
     new_password = request.form.get('password')
     conf_new_password=request.form.get('conf_password')
@@ -153,6 +155,10 @@ def edit_profile_util(request,frontend):
 
     if new_username:
         current_user.username = new_username
+    if first_name:
+        current_user.first_name = first_name
+    if last_name:
+        current_user.last_name = last_name
     if new_bio:
         current_user.bio = new_bio  
     if new_password and conf_new_password and new_password==conf_new_password:
