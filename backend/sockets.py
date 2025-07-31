@@ -1,6 +1,6 @@
-from flask_socketio import emit,join_room
+from flask_socketio import emit, join_room, leave_room
 from flask_login import current_user
-from .models import Message,FriendRequest,User,Group,GroupMessage
+from .models import Message, FriendRequest, User, Group, GroupMessage
 from .extensions import db, socketio
 from datetime import datetime
 
@@ -9,7 +9,7 @@ def configure_socketio(socketio):
     def handle_connect():
         if current_user.is_authenticated:
             # Join the user to a room based on their user_id 
-            # ie,user_id == room_id
+            # so they can receive direct notifications
             join_room(str(current_user.id))
             print(f'User {current_user.id} connected and joined room {current_user.id}')
 
@@ -28,13 +28,15 @@ def configure_socketio(socketio):
             db.session.add(new_message)
             db.session.commit()
 
+            # Send to the receiver's room
             emit('private_message', {
                 'sender_id': current_user.id,
                 'sender_name': current_user.first_name,
                 'message': message,
                 'timestamp': new_message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
-            }, room=str(receiver_id))  # Send to the receiver's room
+            }, room=str(receiver_id))
 
+            # Send back to the sender's room for UI update
             emit('private_message', {
                 'sender_id': current_user.id,
                 'sender_name': current_user.first_name,
@@ -51,7 +53,6 @@ def configure_socketio(socketio):
             if sender_id == receiver_id:
                 return
 
-            # Check if a friend request already exists
             existing = FriendRequest.query.filter_by(
                 sender_id=sender_id, receiver_id=receiver_id, status='pending'
             ).first()
@@ -71,7 +72,7 @@ def configure_socketio(socketio):
     @socketio.on('respond_friend_request')
     def handle_respond_friend_request(data):
         request_id = data.get('request_id')
-        action = data.get('action')  # 'accept' or 'reject'
+        action = data.get('action')
 
         friend_request = FriendRequest.query.get(request_id)
         if friend_request and friend_request.receiver_id == current_user.id:
@@ -79,7 +80,6 @@ def configure_socketio(socketio):
             db.session.commit()
 
             if action == 'accept':
-                # Add to each other's friends list
                 sender = User.query.get(friend_request.sender_id)
                 current_user.friends.append(sender)
                 sender.friends.append(current_user)
@@ -91,42 +91,56 @@ def configure_socketio(socketio):
                 'status': action
             }, room=str(friend_request.sender_id))
     
-
     @socketio.on('create_group')
     def handle_create_group(data):
         if current_user.is_authenticated:
             group_name = data.get('name')
+            member_ids = data.get('members', []) # Get member IDs from frontend
+
             new_group = Group(name=group_name, created_by=current_user)
+            
+            # Add the creator to the group
             new_group.members.append(current_user)
+
+            # Find and add the selected friends to the group
+            if member_ids:
+                members_to_add = User.query.filter(User.id.in_(member_ids)).all()
+                for member in members_to_add:
+                    if member not in new_group.members:
+                        new_group.members.append(member)
+
             db.session.add(new_group)
             db.session.commit()
 
-            emit('group_created', {
-                'id': new_group.id,
-                'name': new_group.name
-            }, room=str(current_user.id))
+            # Notify ALL members of the new group so their UI updates
+            for member in new_group.members:
+                emit('group_created', {
+                    'id': new_group.id,
+                    'name': new_group.name
+                }, room=str(member.id))
 
     @socketio.on('join_group')
     def handle_join_group(data):
         if current_user.is_authenticated:
             group_id = data.get('group_id')
             group = Group.query.get(group_id)
-            if group and current_user not in group.members:
-                group.members.append(current_user)
-                db.session.commit()
 
-            join_room(str(group_id))
+            # A user can only join a group chat if they are a member
+            if group and current_user in group.members:
+                join_room(str(group_id))
 
-            # Fetch and emit existing messages for the group
-            messages = GroupMessage.query.filter_by(group_id=group_id).order_by(GroupMessage.timestamp).all()
-            messages_data = [{
-                'sender': msg.sender.first_name,
-                'content': msg.content,
-                'timestamp': msg.timestamp.strftime('%Y-%m-%d %H:%M:%S')
-            } for msg in messages]
+                messages = GroupMessage.query.filter_by(group_id=group_id).order_by(GroupMessage.timestamp).all()
+                messages_data = [{
+                    'sender': msg.sender.first_name,
+                    'content': msg.content,
+                    'sender_id': msg.sender_id,
+                    'timestamp': msg.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+                } for msg in messages]
 
-            emit('group_messages', {'messages': messages_data}, room=str(group_id))
-    
+                # Emit message history only to the user who just joined
+                emit('group_messages', {'messages': messages_data})
+
+
     @socketio.on('send_group_message')
     def handle_send_group_message(data):
         if current_user.is_authenticated:
@@ -143,39 +157,33 @@ def configure_socketio(socketio):
                 db.session.add(new_message)
                 db.session.commit()
 
+                # Broadcast the new message to everyone in the group chat room
                 emit('new_group_message', {
                     'group_id': group_id,
                     'sender': current_user.first_name,
+                    'sender_id': current_user.id,
                     'content': content,
                     'timestamp': new_message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
                 }, room=str(group_id))
-
-    
-    @socketio.on('add_member')
-    def handle_add_member(data):
+                
+    @socketio.on('delete_group')
+    def handle_delete_group(data):
         if current_user.is_authenticated:
             group_id = data.get('group_id')
-            user_id_to_add = data.get('user_id')
-    
             group = Group.query.get(group_id)
-            user_to_add = User.query.get(user_id_to_add)
-    
-            # Only the group creator can add members
-            if group and user_to_add and group.created_by_id == current_user.id:
-                if user_to_add not in group.members:
-                    group.members.append(user_to_add)
-                    db.session.commit()
-    
-                    # Notify the admin that the user was added
-                    emit('member_added', {
-                        'group_id': group.id,
-                        'user_id': user_to_add.id,
-                        'user_name': user_to_add.first_name
-                    }, room=str(current_user.id))
-    
-                    # notify the newly added user
-                    emit('added_to_group', {
-                        'group_id': group.id,
-                        'group_name': group.name,
-                        'admin_name': current_user.first_name
-                    }, room=str(user_to_add.id))
+
+            # Check if the group exists and if the current user is the creator
+            if group and group.created_by_id == current_user.id:
+                # Store member ids before deletion to notify them
+                member_ids = [member.id for member in group.members]
+
+                # Delete associated group messages first
+                GroupMessage.query.filter_by(group_id=group_id).delete()
+                
+                # Now delete the group itself (relationships are handled by SQLAlchemy)
+                db.session.delete(group)
+                db.session.commit()
+
+                # Notify all former members that the group was deleted
+                for member_id in member_ids:
+                    emit('group_deleted', {'group_id': group_id}, room=str(member_id))
