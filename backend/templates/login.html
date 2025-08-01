@@ -7,7 +7,7 @@
     <div class="card shadow-lg p-4" style="width: 350px;">
         <div class="card-body">
             <h2 class="text-center mb-4 text-primary">Login</h2>
-            <form action="{{ url_for('auth.login') }}" method="post">
+            <form action="{{ url_for('auth_manager.login') }}" method="post">
                 <div class="mb-3">
                     <label for="email" class="form-label">Username or Email</label>
                     <input type="text" name="email" id="email" class="form-control" placeholder="Enter your username or email" required>
@@ -21,7 +21,7 @@
                 </div>
             </form>
             <div class="text-center mt-3">
-                <small>Don't have an account? <a href="{{ url_for('auth.signup') }}" class="text-primary">Sign Up</a></small>
+                <small>Don't have an account? <a href="{{ url_for('auth_manager.signup') }}" class="text-primary">Sign Up</a></small>
             </div>
         </div>
     </div>

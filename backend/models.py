@@ -78,3 +78,19 @@ class GroupMessage(db.Model):
 
     group = db.relationship('Group', backref='messages')
     sender = db.relationship('User')
+
+class BookRating(db.Model):
+    """
+    Represents a single rating given by a user to a book.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    book_id = db.Column(db.String(50), nullable=False, index=True) # Google Books Volume ID
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    rating = db.Column(db.Integer, nullable=False) # Rating from 1 to 5
+    timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    # Relationship to get the user who made the rating
+    user = db.relationship('User', backref='ratings')
+
+    # Ensures a user can only rate a specific book once
+    __table_args__ = (db.UniqueConstraint('book_id', 'user_id', name='_book_user_uc'),)

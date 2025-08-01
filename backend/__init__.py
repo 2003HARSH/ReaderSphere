@@ -26,12 +26,18 @@ def create_app():
     migrate = Migrate(app, db)
     socketio.init_app(app, cors_allowed_origins="*")
 
-    from .views import views
-    from .auth import auth
+    from .message_manager import message_manager
     from .api import api 
+    from .auth_manager import auth_manager
+    from .books_manager import books_manager
+    from .profile_manager import profile_manager
+    from .group_manager import group_manager
 
-    app.register_blueprint(views, url_prefix='/')
-    app.register_blueprint(auth, url_prefix='/')
+    app.register_blueprint(message_manager, url_prefix='/')
+    app.register_blueprint(auth_manager, url_prefix='/')
+    app.register_blueprint(profile_manager, url_prefix='/')
+    app.register_blueprint(books_manager, url_prefix='/')
+    app.register_blueprint(group_manager, url_prefix='/')
     app.register_blueprint(api, url_prefix='/api/v1')
 
     from . import models
