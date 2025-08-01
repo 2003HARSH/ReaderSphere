@@ -1,6 +1,6 @@
 from flask import Blueprint,render_template,request,jsonify,redirect,url_for,flash
 from flask_login import login_required,current_user
-from .models import User,Message,FriendRequest,BookRating
+from .models import BookRating
 import requests
 from bs4 import BeautifulSoup
 from .extensions import db
@@ -13,34 +13,63 @@ books_manager=Blueprint('books_manager',__name__)
 @books_manager.route('/books')
 @login_required
 def books():
-    # --- LEADERBOARD LOGIC ---
-    # Query to get the top 5 book_ids based on average rating and count
-    top_books_query = db.session.query(
+    # LEADERBOARD LOGIC (BAYESIAN AVERAGE) 
+    MIN_RATINGS_THRESHOLD = 2
+
+    # Calculate C: the average rating across ALL books in the database.
+    global_avg_rating_decimal = db.session.query(func.avg(BookRating.rating)).scalar()
+
+    if global_avg_rating_decimal is None:
+        return render_template('books.html', user=current_user, leaderboard_books=[])
+
+    # Convert the Decimal value from the DB to a standard Python float
+    global_avg_rating = float(global_avg_rating_decimal)
+
+    # Get the stats for all books that meet the minimum rating threshold.
+    books_stats_query = db.session.query(
         BookRating.book_id,
         func.avg(BookRating.rating).label('average_rating'),
         func.count(BookRating.id).label('rating_count')
-    ).group_by(BookRating.book_id).order_by(func.avg(BookRating.rating).desc()).limit(5).all()
+    ).group_by(BookRating.book_id).having(func.count(BookRating.id) >= MIN_RATINGS_THRESHOLD).all()
+
+    ranked_books = []
+    for book_stat in books_stats_query:
+        v = book_stat.rating_count
+        # FIX: Convert the Decimal value for this book's average to a float
+        R = float(book_stat.average_rating)
+        
+        # The Bayesian average formula
+        weighted_rating = (v / (v + MIN_RATINGS_THRESHOLD)) * R + (MIN_RATINGS_THRESHOLD / (v + MIN_RATINGS_THRESHOLD)) * global_avg_rating
+        
+        ranked_books.append({
+            'book_id': book_stat.book_id,
+            'average_rating': R,
+            'rating_count': v,
+            'weighted_score': weighted_rating
+        })
+
+    # Sort the books by their new weighted score and take the top 5.
+    top_books = sorted(ranked_books, key=lambda x: x['weighted_score'], reverse=True)[:5]
 
     leaderboard_books = []
-    for book_data in top_books_query:
+    for book_data in top_books:
         try:
-            # Fetch book details from Google Books API
-            url = f"https://www.googleapis.com/books/v1/volumes/{book_data.book_id}"
+            url = f"https://www.googleapis.com/books/v1/volumes/{book_data['book_id']}"
             res = requests.get(url)
-            res.raise_for_status()  # Raise an exception for bad status codes
+            res.raise_for_status()
             data = res.json()
             
             info = data.get('volumeInfo', {})
             leaderboard_books.append({
-                'id': book_data.book_id,
+                'id': book_data['book_id'],
                 'title': info.get('title', 'Title not available'),
                 'thumbnail': info.get('imageLinks', {}).get('thumbnail'),
-                'avg_rating': round(book_data.average_rating, 2),
-                'rating_count': book_data.rating_count
+                'avg_rating': round(book_data['average_rating'], 2),
+                'rating_count': book_data['rating_count']
             })
         except requests.exceptions.RequestException as e:
-            print(f"Error fetching book data for {book_data.book_id}: {e}")
-            continue # Skip this book if API call fails
+            print(f"Error fetching book data for {book_data['book_id']}: {e}")
+            continue
 
     return render_template('books.html', user=current_user, leaderboard_books=leaderboard_books)
 
