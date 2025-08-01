@@ -19,7 +19,12 @@
 ### 💬 Messaging
 
 ![Chat Interface](artifacts/2.png)
-*Real-time 1-on-1 messaging using WebSockets.*
+*Real-time 1-on-1 messaging using WebSockets.*### 💬 Messaging
+
+### 💬 Groups
+
+![Chat Interface](artifacts/4.png)
+*Create a space with like minded readers.*
 
 ---
 
@@ -29,7 +34,7 @@
   Secure login, registration, and profile setup.
 
 * 📚 **Books Section (Metadata Search)**
-  Search for books using online metadata (scraped using BeautifulSoup + Google API).
+  Search for books using online metadata (scraped via BeautifulSoup + Google API).
 
 * 💬 **Real-Time Messaging**
   1-on-1 messaging using WebSockets for instant communication.
@@ -43,48 +48,44 @@
 * 📝 **Profile Editing**
   Update your bio, profile picture, and date of birth.
 
-* ☁️ **Cloud Storage**
-  Profile pictures are stored on **AWS S3**.
+* ☁️ **Cloud Storage (S3)**
+  Profile pictures are stored on **AWS S3** for reliability and performance.
 
-* 🧑‍🤝‍🧑 **Group Chats** *(in development)*
-  Interest-based group chats to discuss genres, authors, and more.
+* 👥 **Group Chats (NEW!)**
+  Users can **create groups** and **add their friends** to spark conversations around shared interests, genres, or favorite authors — a virtual reading room for like-minded readers.
 
 ---
 
-## ⚙️ Architecture & Cloud Infrastructure
+## ⚙️ Architecture & Deployment
 
-ReaderSphere is **cloud-native** and designed for scalability and performance using AWS infrastructure:
+ReaderSphere is designed with a modular architecture and is deployed using **Render**, with AWS for media storage.
 
 ### 🧱 Application Architecture
 
-* Modular **REST API** backend with Flask
-* Web interface built using HTML/CSS/JS (Jinja templating)
-* WebSocket support via **Flask-SocketIO**
-* Web scraping with **BeautifulSoup** and Google API
+* Flask-based **REST API** backend
+* Templated **HTML/CSS/JS frontend** (Jinja2)
+* **WebSocket** support via Flask-SocketIO
+* **BeautifulSoup** + Google Books API for book metadata scraping
 
-### ☁️ Cloud Deployment (AWS)
+### 🚀 Deployment
 
-* **Amazon ECS** (Fargate): Runs containerized Flask backend
-* **Amazon ECR**: Stores Docker images for deployment
-* **Amazon RDS (PostgreSQL)**: Managed relational DB for scalable storage
-* **Amazon S3**: Profile picture storage and static assets
-* **Application Load Balancer (ALB)**: Distributes traffic across containers
-* **Auto Scaling Group (ASG)**: Automatically adjusts container count based on load
-* **IAM Roles + Secrets Manager**: Secure handling of credentials and permissions
+* **Render**: Hosts the full-stack web app
+* **Free PostgreSQL Hosting**: For persistent storage of user data, messages, groups, etc.
+* **AWS S3**: For profile picture and media storage
+* **GitHub Actions**: CI/CD pipeline for automatic deployment
 
 ---
 
 ## 🛠️ Technologies Used
 
-| Category             | Tech Stack                             |
-| -------------------- | -------------------------------------- |
-| **Backend**          | Flask, Flask-SocketIO, RESTful APIs    |
-| **Database**         | PostgreSQL on AWS RDS  |
-| **Frontend**         | HTML/CSS, JavaScript, Jinja2 Templates |
-| **Web Scraping**     | BeautifulSoup, Google Books API        |
-| **Containerization** | Docker, AWS ECS (Fargate)              |
-| **CI/CD**            | GitHub Actions → ECR → ECS Deployment  |
-| **Cloud Services**   | AWS S3, RDS, ECS, ECR, ALB, ASG        |
+| Category           | Tech Stack                                           |
+| ------------------ | ---------------------------------------------------- |
+| **Backend**        | Flask, Flask-SocketIO, RESTful APIs                  |
+| **Frontend**       | HTML/CSS, JavaScript, Jinja2 Templates               |
+| **Database**       | PostgreSQL (Free cloud DB provider)                  |
+| **Web Scraping**   | BeautifulSoup, Google Books API                      |
+| **Cloud Platform** | **Render** (App Hosting), **AWS S3** (Media Storage) |
+| **CI/CD**          | GitHub Actions                                       |
 
 ---
 
@@ -101,10 +102,10 @@ ReaderSphere is **cloud-native** and designed for scalability and performance us
 
    ```bash
    python -m venv venv
-   source venv/bin/activate  # Windows: venv\Scripts\activate
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
-3. **Install Requirements**
+3. **Install Dependencies**
 
    ```bash
    pip install -r requirements.txt
@@ -116,39 +117,26 @@ ReaderSphere is **cloud-native** and designed for scalability and performance us
    python app.py
    ```
 
-   App will run at: `http://localhost:5000/`
-
----
-
-## 🚀 Production Deployment (AWS)
-
-ReaderSphere is fully containerized and deployed on AWS using the following pipeline:
-
-1. **CI/CD** via **GitHub Actions** to build and push images to **ECR**
-2. **ECS Fargate** for running containers without managing servers
-3. **ALB + ASG** for load balancing and auto-scaling
-4. **RDS PostgreSQL** for production-grade database
-5. **S3** for storing profile pictures and static media
-
-Want to deploy your own instance? Check out the [`infra/`](infra/) folder (coming soon) for Terraform/CloudFormation setup scripts.
+   The app will be live at: `http://localhost:5000/`
 
 ---
 
 ## 📌 Roadmap
 
-* ✅ Real-time messaging
-* ✅ Book metadata search
-* ✅ Profile creation and editing
-* ✅ Cloud deployment (AWS: ECS, ALB, ASG, RDS, S3)
-* 🚧 Group chats
+* ✅ Real-time 1-on-1 chat
+* ✅ Book metadata scraping + search
+* ✅ User profile creation and editing
+* ✅ Group chat creation and management
+* ✅ Render + S3 deployment
 * 🚧 Book reviews and ratings
-* 🚧 Personalized recommendation engine
+* 🚧 Personalized book recommendation engine
+* 🚧 Mobile-first responsive redesign
 
 ---
 
 ## 🤝 Contributing
 
-Pull requests are welcome! For major changes, please open an issue first to discuss what you'd like to change.
+Pull requests are welcome! For major changes, open an issue first to discuss what you’d like to improve or add.
 
 ---
 
