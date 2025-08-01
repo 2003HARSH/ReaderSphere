@@ -30,12 +30,28 @@
                     <li class="nav-item"><a class="nav-link" href="/messages">Messages</a></li>
                     <li class="nav-item"><a class="nav-link" href="/groups">Groups</a></li>
                     <li class="nav-item"><a class="nav-link" href="/books">Books</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{url_for('auth_manager.logout')}}">Logout</a></li>
                     {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
+
+    <!-- Flash Messages Block -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="container mt-3">
+        {% for category, message in messages %}
+            {# Map 'error' category to 'danger' for red Bootstrap alerts #}
+            {% set alert_class = 'danger' if category == 'error' else category %}
+            <div class="alert alert-{{ alert_class }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
 
     <!-- Main Content -->
     {% block content %}{% endblock %}
