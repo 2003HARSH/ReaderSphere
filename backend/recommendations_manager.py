@@ -150,7 +150,7 @@ def update_friend_suggestions(user_id: int, top_n: int = 10):
         other_vector = np.array(other.as_vector())
         if np.linalg.norm(other_vector) > 0:
             similarity = float(cosine_similarity([user_vector], [other_vector])[0][0])
-            if similarity > 0.001: # Set a threshold to only suggest relevant users
+            if similarity > 0.1: # Set a threshold to only suggest relevant users
                 similarities.append((other.user_id, similarity))
 
     top_similar = sorted(similarities, key=lambda x: x[1], reverse=True)[:top_n]
