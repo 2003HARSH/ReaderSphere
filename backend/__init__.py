@@ -41,7 +41,7 @@ def create_app():
     app.register_blueprint(api, url_prefix='/api/v1')
 
     from . import models
-    login_manager.login_view='auth.login'
+    login_manager.login_view='auth_manager.login'
     login_manager.init_app(app)
 
     @login_manager.user_loader

@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from .extensions import db
 from sqlalchemy import func
+import datetime
 
 books_manager=Blueprint('books_manager',__name__)
 
@@ -12,7 +13,36 @@ books_manager=Blueprint('books_manager',__name__)
 @books_manager.route('/books')
 @login_required
 def books():
-    return render_template('books.html',user=current_user)
+    # --- LEADERBOARD LOGIC ---
+    # Query to get the top 5 book_ids based on average rating and count
+    top_books_query = db.session.query(
+        BookRating.book_id,
+        func.avg(BookRating.rating).label('average_rating'),
+        func.count(BookRating.id).label('rating_count')
+    ).group_by(BookRating.book_id).order_by(func.avg(BookRating.rating).desc()).limit(5).all()
+
+    leaderboard_books = []
+    for book_data in top_books_query:
+        try:
+            # Fetch book details from Google Books API
+            url = f"https://www.googleapis.com/books/v1/volumes/{book_data.book_id}"
+            res = requests.get(url)
+            res.raise_for_status()  # Raise an exception for bad status codes
+            data = res.json()
+            
+            info = data.get('volumeInfo', {})
+            leaderboard_books.append({
+                'id': book_data.book_id,
+                'title': info.get('title', 'Title not available'),
+                'thumbnail': info.get('imageLinks', {}).get('thumbnail'),
+                'avg_rating': round(book_data.average_rating, 2),
+                'rating_count': book_data.rating_count
+            })
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching book data for {book_data.book_id}: {e}")
+            continue # Skip this book if API call fails
+
+    return render_template('books.html', user=current_user, leaderboard_books=leaderboard_books)
 
 @books_manager.route('/book/<book_id>')
 @login_required
@@ -66,11 +96,11 @@ def book_search(query):
     if data.get('items'):
         # Get the ID of the first book found and redirect
         first_book_id = data['items'][0]['id']
-        return redirect(url_for('views.book', book_id=first_book_id))
+        return redirect(url_for('books_manager.book', book_id=first_book_id))
     else:
         # Handle case where no books are found
         flash('No books found for that query.', 'error')
-        return redirect(url_for('book_manager.books'))
+        return redirect(url_for('books_manager.books'))
     
 @books_manager.route('/rate_book/<book_id>', methods=['POST'])
 @login_required
