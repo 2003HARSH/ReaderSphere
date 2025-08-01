@@ -6,53 +6,55 @@
 
 ## 📸 Screenshots
 
-### 🔐 Profile
-
-![Profile Page](artifacts/1.png)
+### 🔐 Profile  
+![Profile Page](artifacts/1.png)  
 *User profile view and editing (bio, profile pic, DOB).*
 
-### 📚 Book Search
-
-![Book Search](artifacts/3.png)
+### 📚 Book Search  
+![Book Search](artifacts/3.png)  
 *Search books using metadata (scraped with BeautifulSoup).*
 
-### 💬 Messaging
+### 💬 Messaging  
+![Chat Interface](artifacts/2.png)  
+*Real-time 1-on-1 messaging using WebSockets.*
 
-![Chat Interface](artifacts/2.png)
-*Real-time 1-on-1 messaging using WebSockets.*### 💬 Messaging
-
-### 💬 Groups
-
-![Chat Interface](artifacts/4.png)
-*Create a space with like minded readers.*
+### 👥 Groups  
+![Group Chat](artifacts/4.png)  
+*Create spaces to discuss books with like-minded readers.*
 
 ---
 
 ## 🌟 Features
 
-* 👤 **User Authentication & Profile Creation**
+- 👤 **User Authentication & Profile Creation**  
   Secure login, registration, and profile setup.
 
-* 📚 **Books Section (Metadata Search)**
+- 📚 **Books Section (Metadata Search)**  
   Search for books using online metadata (scraped via BeautifulSoup + Google API).
 
-* 💬 **Real-Time Messaging**
+- 💬 **Real-Time Messaging**  
   1-on-1 messaging using WebSockets for instant communication.
 
-* 🤝 **Friend Requests**
+- 🤝 **Friend Requests**  
   Send/receive friend requests, also powered by WebSockets.
 
-* 🔎 **User Search**
+- 🔎 **User Search**  
   Search and connect with fellow book lovers by username.
 
-* 📝 **Profile Editing**
+- 📝 **Profile Editing**  
   Update your bio, profile picture, and date of birth.
 
-* ☁️ **Cloud Storage (S3)**
-  Profile pictures are stored on **AWS S3** for reliability and performance.
+- 👥 **Group Chats**  
+  Users can create groups and add their friends to spark discussions around shared genres, authors, or interests.
 
-* 👥 **Group Chats (NEW!)**
-  Users can **create groups** and **add their friends** to spark conversations around shared interests, genres, or favorite authors — a virtual reading room for like-minded readers.
+- ⭐ **Book Ratings**  
+  Rate books you’ve read and explore community ratings on each book page.
+
+- 🏆 **Leaderboard**  
+  Discover the most active users and top-rated books across the platform.
+
+- ☁️ **Cloud Storage (S3)**  
+  Profile pictures are stored on **AWS S3** for reliability and performance.
 
 ---
 
@@ -62,24 +64,25 @@ ReaderSphere is designed with a modular architecture and is deployed using **Ren
 
 ### 🧱 Application Architecture
 
-* Flask-based **REST API** backend
-* Templated **HTML/CSS/JS frontend** (Jinja2)
-* **WebSocket** support via Flask-SocketIO
-* **BeautifulSoup** + Google Books API for book metadata scraping
+- Flask-based **REST API** backend  
+- Templated **HTML/CSS/JS frontend** (Jinja2)  
+- **WebSocket** support via Flask-SocketIO  
+- **BeautifulSoup** + Google Books API for book metadata scraping  
+- PostgreSQL for persistent user, book, message, rating, and group data
 
 ### 🚀 Deployment
 
-* **Render**: Hosts the full-stack web app
-* **Free PostgreSQL Hosting**: For persistent storage of user data, messages, groups, etc.
-* **AWS S3**: For profile picture and media storage
-* **GitHub Actions**: CI/CD pipeline for automatic deployment
+- **Render**: Hosts the full-stack web app  
+- **Free PostgreSQL Hosting**: Stores users, messages, books, ratings, groups, etc.  
+- **AWS S3**: Manages profile picture uploads  
+- **GitHub Actions**: CI/CD for code deployment and testing  
 
 ---
 
 ## 🛠️ Technologies Used
 
 | Category           | Tech Stack                                           |
-| ------------------ | ---------------------------------------------------- |
+|--------------------|------------------------------------------------------|
 | **Backend**        | Flask, Flask-SocketIO, RESTful APIs                  |
 | **Frontend**       | HTML/CSS, JavaScript, Jinja2 Templates               |
 | **Database**       | PostgreSQL (Free cloud DB provider)                  |
@@ -92,7 +95,6 @@ ReaderSphere is designed with a modular architecture and is deployed using **Ren
 ## 📦 Local Setup Instructions
 
 1. **Clone the Repository**
-
    ```bash
    git clone https://github.com/2003HARSH/Readersphere.git
    cd Readersphere
@@ -127,8 +129,11 @@ ReaderSphere is designed with a modular architecture and is deployed using **Ren
 * ✅ Book metadata scraping + search
 * ✅ User profile creation and editing
 * ✅ Group chat creation and management
+* ✅ Book rating system
+* ✅ Leaderboard
 * ✅ Render + S3 deployment
-* 🚧 Book reviews and ratings
+* 🚧 Friend Suggestions based on similar taste in books
+* 🚧 Book reviews and community discussions
 * 🚧 Personalized book recommendation engine
 * 🚧 Mobile-first responsive redesign
 
