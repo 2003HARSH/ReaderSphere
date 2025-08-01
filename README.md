@@ -39,7 +39,10 @@
   Send/receive friend requests, also powered by WebSockets.
 
 - 🔎 **User Search**  
-  Search and connect with fellow book lovers by username.
+  Search users by username to connect with fellow readers easily.
+
+- 🧠 **Friend Suggestions (NEW!)**  
+  Get personalized friend recommendations based on shared book genre preferences using a cosine similarity engine over user genre vectors.
 
 - 📝 **Profile Editing**  
   Update your bio, profile picture, and date of birth.
@@ -60,20 +63,21 @@
 
 ## ⚙️ Architecture & Deployment
 
-ReaderSphere is designed with a modular architecture and is deployed using **Render**, with AWS for media storage.
+ReaderSphere is designed with a modular architecture and is deployed using **Render**, with AWS used for media storage.
 
 ### 🧱 Application Architecture
 
 - Flask-based **REST API** backend  
 - Templated **HTML/CSS/JS frontend** (Jinja2)  
 - **WebSocket** support via Flask-SocketIO  
-- **BeautifulSoup** + Google Books API for book metadata scraping  
-- PostgreSQL for persistent user, book, message, rating, and group data
+- Book metadata scraping via **BeautifulSoup** + Google Books API  
+- Genre normalization using **Google Gemini API + JSON schema validation**  
+- Cosine similarity engine for **friend recommendations**
 
 ### 🚀 Deployment
 
 - **Render**: Hosts the full-stack web app  
-- **Free PostgreSQL Hosting**: Stores users, messages, books, ratings, groups, etc.  
+- **Free PostgreSQL Hosting**: Stores users, messages, books, ratings, groups, suggestions, etc.  
 - **AWS S3**: Manages profile picture uploads  
 - **GitHub Actions**: CI/CD for code deployment and testing  
 
@@ -87,6 +91,8 @@ ReaderSphere is designed with a modular architecture and is deployed using **Ren
 | **Frontend**       | HTML/CSS, JavaScript, Jinja2 Templates               |
 | **Database**       | PostgreSQL (Free cloud DB provider)                  |
 | **Web Scraping**   | BeautifulSoup, Google Books API                      |
+| **ML/NLP**         | Google Gemini (for genre classification)             |
+| **Friend Engine**  | Cosine Similarity (via NumPy + scikit-learn)         |
 | **Cloud Platform** | **Render** (App Hosting), **AWS S3** (Media Storage) |
 | **CI/CD**          | GitHub Actions                                       |
 
@@ -131,8 +137,9 @@ ReaderSphere is designed with a modular architecture and is deployed using **Ren
 * ✅ Group chat creation and management
 * ✅ Book rating system
 * ✅ Leaderboard
+* ✅ Friend suggestion system
+* ✅ User search functionality
 * ✅ Render + S3 deployment
-* 🚧 Friend Suggestions based on similar taste in books
 * 🚧 Book reviews and community discussions
 * 🚧 Personalized book recommendation engine
 * 🚧 Mobile-first responsive redesign
@@ -157,3 +164,4 @@ For suggestions, queries, or collaborations, feel free to reach out.
 
 Made with ☕, frustration, and `websockets` by **Harsh Gupta**
 GitHub: [@2003HARSH](https://github.com/2003HARSH)
+
