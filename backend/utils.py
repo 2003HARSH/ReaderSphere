@@ -2,7 +2,7 @@ import boto3
 from botocore.exceptions import NoCredentialsError
 import os
 
-# --- S3 Configuration ---
+# S3 Configuration 
 S3_BUCKET = os.getenv('S3_BUCKET_NAME')
 S3_LOCATION = f'https://{S3_BUCKET}.s3.amazonaws.com/'
 S3_ACCESS_KEY = os.getenv('AWS_ACCESS_KEY_ID')

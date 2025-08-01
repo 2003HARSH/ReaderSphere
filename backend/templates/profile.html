@@ -17,13 +17,15 @@
                     {%if user.bio %}
                     <p class="text-muted">{{ user.bio }}</p>
                     {%endif %}
-                    {% if edit== True %}
-                    <a href="{{ url_for('profile_manager.edit_profile')}}" class="btn btn-outline-primary btn-sm mt-2">Edit
-                        Profile</a>
-                    {%endif%}
-                    {% if edit == False and not is_friend%}
-                    <button class="btn btn-outline-primary btn-sm send-friend-btn" data-id="{{ user.id }}">Add
-                        Friend</button>
+                    
+                    {% if edit %}
+                        <a href="{{ url_for('profile_manager.edit_profile')}}" class="btn btn-outline-primary btn-sm mt-2">Edit Profile</a>
+                    {% else %}
+                        {% if is_friend %}
+                            <button class="btn btn-outline-danger btn-sm mt-2" id="unfriend-btn" data-id="{{ user.id }}">Unfriend</button>
+                        {% else %}
+                            <button class="btn btn-outline-primary btn-sm mt-2 send-friend-btn" data-id="{{ user.id }}">Add Friend</button>
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
@@ -50,8 +52,7 @@
                 </div>
                 <div class="card-body">
                     {% for req in pending_requests %}
-                    {% if req.status == 'pending' %}
-                    <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2" id="request-{{ req.id }}">
                         <span>{{ req.sender.first_name }} (@{{ req.sender.username }})</span>
                         <div>
                             <button class="btn btn-success btn-sm me-1"
@@ -60,7 +61,6 @@
                                 onclick="respondRequest(`{{ req.id }}`, 'reject')">Reject</button>
                         </div>
                     </div>
-                    {% endif %}
                     {% endfor %}
                 </div>
             </div>
@@ -93,17 +93,29 @@
             {% endif %}
         </div>
 
-
-
-        <!-- Right Side: People List -->
-        {% if people and edit == True%}
+        <!-- Right Side: Suggestions and Search -->
         <div class="col-md-3">
-            <div class="card shadow-lg">
+            <!-- User Search -->
+            <div class="card shadow-lg mb-3">
                 <div class="card-header bg-secondary text-white">
-                    <h5>People</h5>
+                    <h5>Find People</h5>
+                </div>
+                <div class="card-body">
+                    <input type="text" id="user-search-input" class="form-control" placeholder="Search by name or username...">
+                </div>
+                <ul class="list-group list-group-flush" id="user-search-results">
+                    <!-- Live search results will appear here -->
+                </ul>
+            </div>
+
+            <!-- Friend Suggestions (from ML Model) -->
+            {% if suggestions and edit == True %}
+            <div class="card shadow-lg mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5>People You May Know</h5>
                 </div>
                 <ul class="list-group list-group-flush">
-                    {% for person in people %}
+                    {% for person in suggestions %}
                     <li class="list-group-item d-flex align-items-center justify-content-between">
                         <a id="profile_link" href="{{url_for('profile_manager.profile',username=person.username)}}"
                             class="d-flex align-items-center">
@@ -111,49 +123,83 @@
                                 class="rounded-circle border"
                                 style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
                             <div>
-                                <strong>{{ person.first_name }} {{ person.last_name }}</strong>
+                                <strong>{{ person.first_name }}</strong>
                                 <br> <small class="text-muted">@{{ person.username }}</small>
                             </div>
                         </a>
                         <button class="btn btn-outline-primary btn-sm send-friend-btn" 
                         data-id="{{ person.id }}"
                         data-username="{{ person.username }}">
-                    Add Friend
-                </button>
+                            Add Friend
+                        </button>
                     </li>
                     {% endfor %}
                 </ul>
             </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 </div>
 
-<style>
-    .card {
-        border-radius: 10px;
-        transition: 0.3s;
+<!-- Scripts for this page -->
+<script>
+// This function overrides the default respondRequest function from base.html
+function respondRequest(requestId, action) {
+    // Immediately hide the request from the UI to prevent multiple clicks
+    const requestDiv = document.getElementById(`request-${requestId}`);
+    if (requestDiv) {
+        requestDiv.style.display = 'none';
     }
 
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.15);
-    }
+    // Send the event to the server
+    socket.emit('respond_friend_request', {
+        request_id: requestId,
+        action: action
+    });
+}
 
-    .rounded-circle {
-        border: 2px solid #ddd;
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('user-search-input');
+    const searchResults = document.getElementById('user-search-results');
 
-    .btn-outline-primary:hover {
-        background-color: #0056b3;
-        color: white;
-    }
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value;
+        if (query.length < 2) {
+            searchResults.innerHTML = '';
+            return;
+        }
 
-    #profile_link {
-        text-decoration: none;
-        color: inherit;
-        flex-grow: 1;
-    }
-</style>
+        fetch(`/search_users?q=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                searchResults.innerHTML = '';
+                data.forEach(user => {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item';
+                    li.innerHTML = `
+                        <a href="/${user.username}" class="d-flex align-items-center text-decoration-none text-dark">
+                            <img src="${user.profile_pic}" class="rounded-circle border" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">
+                            <div>
+                                <strong>${user.first_name}</strong>
+                                <br>
+                                <small class="text-muted">@${user.username}</small>
+                            </div>
+                        </a>
+                    `;
+                    searchResults.appendChild(li);
+                });
+            });
+    });
 
+    const unfriendBtn = document.getElementById('unfriend-btn');
+    if (unfriendBtn) {
+        unfriendBtn.addEventListener('click', () => {
+            const friendId = unfriendBtn.dataset.id;
+            if (confirm('Are you sure you want to unfriend this user?')) {
+                socket.emit('unfriend', { friend_id: parseInt(friendId, 10) });
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

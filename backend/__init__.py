@@ -27,7 +27,6 @@ def create_app():
     socketio.init_app(app, cors_allowed_origins="*")
 
     from .message_manager import message_manager
-    from .api import api 
     from .auth_manager import auth_manager
     from .books_manager import books_manager
     from .profile_manager import profile_manager
@@ -38,7 +37,6 @@ def create_app():
     app.register_blueprint(profile_manager, url_prefix='/')
     app.register_blueprint(books_manager, url_prefix='/')
     app.register_blueprint(group_manager, url_prefix='/')
-    app.register_blueprint(api, url_prefix='/api/v1')
 
     from . import models
     login_manager.login_view='auth_manager.login'

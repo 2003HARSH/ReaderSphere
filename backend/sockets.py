@@ -1,6 +1,6 @@
 from flask_socketio import emit, join_room, leave_room
 from flask_login import current_user
-from .models import Message, FriendRequest, User, Group, GroupMessage
+from .models import Message, FriendRequest, User, Group, GroupMessage,FriendSuggestion
 from .extensions import db, socketio
 from datetime import datetime
 
@@ -73,17 +73,22 @@ def configure_socketio(socketio):
     def handle_respond_friend_request(data):
         request_id = data.get('request_id')
         action = data.get('action')
-
         friend_request = FriendRequest.query.get(request_id)
-        if friend_request and friend_request.receiver_id == current_user.id:
+        
+        if friend_request and friend_request.receiver_id == current_user.id and friend_request.status == 'pending':
             friend_request.status = action
-            db.session.commit()
-
+            
             if action == 'accept':
                 sender = User.query.get(friend_request.sender_id)
+                
+                # Explicitly adding the friendship from both sides.
                 current_user.friends.append(sender)
                 sender.friends.append(current_user)
-                db.session.commit()
+
+                FriendSuggestion.query.filter_by(user_id=current_user.id, suggested_friend_id=sender.id).delete()
+                FriendSuggestion.query.filter_by(user_id=sender.id, suggested_friend_id=current_user.id).delete()
+                
+            db.session.commit()
 
             emit('friend_request_response', {
                 'receiver_id': current_user.id,
@@ -187,3 +192,24 @@ def configure_socketio(socketio):
                 # Notify all former members that the group was deleted
                 for member_id in member_ids:
                     emit('group_deleted', {'group_id': group_id}, room=str(member_id))
+
+    @socketio.on('unfriend')
+    def handle_unfriend(data):
+        if current_user.is_authenticated:
+            friend_id = data.get('friend_id')
+            friend_to_remove = User.query.get(friend_id)
+
+            if friend_to_remove and friend_to_remove in current_user.friends:
+                current_user.friends.remove(friend_to_remove)
+                friend_to_remove.friends.remove(current_user)
+                db.session.commit()
+
+                emit('friendship_ended', {
+                    'unfriended_user_id': friend_to_remove.id,
+                    'unfriended_by_user_id': current_user.id
+                }, room=str(current_user.id))
+                
+                emit('friendship_ended', {
+                    'unfriended_user_id': friend_to_remove.id,
+                    'unfriended_by_user_id': current_user.id
+                }, room=str(friend_to_remove.id))

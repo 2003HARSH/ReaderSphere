@@ -42,7 +42,6 @@
     {% if messages %}
         <div class="container mt-3">
         {% for category, message in messages %}
-            {# Map 'error' category to 'danger' for red Bootstrap alerts #}
             {% set alert_class = 'danger' if category == 'error' else category %}
             <div class="alert alert-{{ alert_class }} alert-dismissible fade show" role="alert">
                 {{ message }}
@@ -76,6 +75,15 @@
 
         socket.on('friend_request_response', (data) => {
             alert(`${data.receiver_name} ${data.status} your friend request`);
+            location.reload();
+        });
+
+        // --- NEW LISTENER FOR UNFRIEND EVENT ---
+        socket.on('friendship_ended', (data) => {
+            // A simple reload is the most reliable way to ensure the UI is consistent
+            // for both users after an unfriend action.
+            alert('A friendship has been updated.');
+            location.reload();
         });
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -94,7 +102,7 @@
                 request_id: requestId,
                 action: action
             });
-            location.reload();
+            // No need to reload here, the 'friend_request_response' listener will handle it
         }
     </script>
     {% endif %}

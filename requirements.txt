@@ -12,3 +12,5 @@ boto3
 gunicorn
 eventlet
 pytest
+scikit-learn
+google-generativeai

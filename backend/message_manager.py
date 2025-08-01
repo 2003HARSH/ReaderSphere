@@ -1,10 +1,6 @@
-from flask import Blueprint,render_template,request,jsonify,redirect,url_for,abort
+from flask import Blueprint,render_template,jsonify
 from flask_login import login_required,current_user
-from .models import User,Message,FriendRequest,BookRating
-import requests
-from bs4 import BeautifulSoup
-from .extensions import db
-from sqlalchemy import func
+from .models import User,Message
 
 message_manager=Blueprint('message_manager',__name__)
 

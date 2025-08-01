@@ -6,6 +6,7 @@ from .models import User
 from werkzeug.security import generate_password_hash,check_password_hash
 import os
 from .extensions import db
+from datetime import datetime
 
 auth_manager=Blueprint('auth_manager',__name__)
 
@@ -68,7 +69,6 @@ def signup():
 
         msg=[]
         flag=True
-        # --- (Your validation logic for email, username, etc. remains here) ---
         if User.query.filter_by(email=email).first():
             msg.append("Email already exists")
             flag=False

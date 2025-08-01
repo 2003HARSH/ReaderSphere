@@ -3,11 +3,11 @@ from .utils import upload_to_s3,allowed_file,S3_BUCKET
 from werkzeug.utils import secure_filename
 from flask_login import login_required,current_user
 from flask import Blueprint,render_template,request,jsonify,redirect,url_for,abort
-from .models import User,FriendRequest
+from .models import User,FriendRequest,FriendSuggestion
 from .extensions import db
 from werkzeug.security import generate_password_hash
 from datetime import datetime
-
+from sqlalchemy import or_ 
 
 profile_manager=Blueprint('profile_manager',__name__)
    
@@ -37,10 +37,40 @@ def profile(username):
 @profile_manager.route('/my_profile')
 @login_required
 def my_profile():
-    people=User.query.filter(User.id!=current_user.id).all()
+    suggestions_query = FriendSuggestion.query.filter_by(user_id=current_user.id).order_by(FriendSuggestion.similarity_score.desc()).all()
+    suggestions = [s.suggested_friend for s in suggestions_query]
+
     pending_requests = FriendRequest.query.filter_by(receiver_id=current_user.id, status='pending').all()
-    non_friends = User.query.filter(User.id != current_user.id).filter(~User.id.in_([friend.id for friend in current_user.friends])).all()
-    return render_template('profile.html', user=current_user, people=non_friends, edit=True, pending_requests=pending_requests)
+    
+    return render_template('profile.html', 
+                           user=current_user,  
+                           edit=True, 
+                           pending_requests=pending_requests,
+                           suggestions=suggestions)
+
+@profile_manager.route('/search_users')
+@login_required
+def search_users():
+    """Endpoint for the user search functionality."""
+    query = request.args.get('q', '')
+    if not query:
+        return jsonify([])
+
+    # Search for users by username or first name (case-insensitive)
+    search_term = f"%{query}%"
+    users = User.query.filter(
+        or_(
+            User.username.ilike(search_term),
+            User.first_name.ilike(search_term)
+        ),
+        User.id != current_user.id  # Exclude the current user from results
+    ).limit(10).all()
+
+    users_data = [
+        {'username': user.username, 'first_name': user.first_name, 'profile_pic': user.profile_pic}
+        for user in users
+    ]
+    return jsonify(users_data)
 
 @profile_manager.route('/edit_profile', methods=['GET', 'POST'])
 @login_required
@@ -98,4 +128,5 @@ def get_users():
     } for user in users]
 
     return jsonify(users_data)
+
             

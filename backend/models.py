@@ -1,6 +1,8 @@
 from .extensions import db
 from flask_login import UserMixin
 import datetime
+from sqlalchemy.dialects.postgresql import DOUBLE_PRECISION
+from sqlalchemy import Float
 
 # Many-to-Many relationship for accepted friendships
 friends_association = db.Table('friends',
@@ -94,3 +96,55 @@ class BookRating(db.Model):
 
     # Ensures a user can only rate a specific book once
     __table_args__ = (db.UniqueConstraint('book_id', 'user_id', name='_book_user_uc'),)
+
+
+
+class BookGenreMap(db.Model):
+    __tablename__ = 'book_genre_map'
+
+    book_id = db.Column(db.String(50), primary_key=True)  # Google Books Volume ID
+    raw_genre = db.Column(db.String(255), nullable=False)
+    normalized_genre = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    def __repr__(self):
+        return f"<BookGenreMap(book_id='{self.book_id}', normalized='{self.normalized_genre}')>"
+
+class UserGenreVector(db.Model):
+    __tablename__ = 'user_genre_vector'
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    romance = db.Column(Float, default=0.0)
+    science_fiction = db.Column(Float, default=0.0)
+    fantasy = db.Column(Float, default=0.0)
+    mystery = db.Column(Float, default=0.0)
+    historical = db.Column(Float, default=0.0)
+    biography = db.Column(Float, default=0.0)
+    non_fiction = db.Column(Float, default=0.0)
+    thriller = db.Column(Float, default=0.0)
+    young_adult = db.Column(Float, default=0.0)
+    self_help = db.Column(Float, default=0.0)
+    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    user = db.relationship('User', backref='genre_vector', uselist=False)
+
+    def as_vector(self):
+        return [
+            self.romance, self.science_fiction, self.fantasy,
+            self.mystery, self.historical, self.biography,
+            self.non_fiction, self.thriller, self.young_adult, self.self_help
+        ]
+
+class FriendSuggestion(db.Model):
+    __tablename__ = 'friend_suggestions'
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    suggested_friend_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    similarity_score = db.Column(Float, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+
+    user = db.relationship('User', foreign_keys=[user_id], backref='suggested_friends')
+    suggested_friend = db.relationship('User', foreign_keys=[suggested_friend_id])
+
+    def __repr__(self):
+        return f"<FriendSuggestion({self.user_id} → {self.suggested_friend_id}, sim={self.similarity_score:.4f})>"
