@@ -58,6 +58,9 @@
 
 - ☁️ **Cloud Storage (S3)**  
   Profile pictures are stored on **AWS S3** for reliability and performance.
+  
+- 🔒 **AES-Encrypted Messages (NEW!)**  
+  All private and group messages are encrypted at rest using AES encryption to enhance user privacy and prevent data leakage even in the event of a database breach.
 
 ---
 
