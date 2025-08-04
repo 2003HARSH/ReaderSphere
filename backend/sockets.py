@@ -3,6 +3,8 @@ from flask_login import current_user
 from .models import Message, FriendRequest, User, Group, GroupMessage,FriendSuggestion
 from .extensions import db, socketio
 from datetime import datetime
+from .encryption_manager import encrypt_message, decrypt_message 
+
 
 def configure_socketio(socketio):   
     @socketio.on('connect')
@@ -19,8 +21,10 @@ def configure_socketio(socketio):
             message = data.get('message')
             receiver_id = data.get('receiver_id')
 
+            encrypted_msg = encrypt_message(message)
+
             new_message = Message(
-                content=message,
+                content=encrypted_msg,
                 sender_id=current_user.id,
                 receiver_id=receiver_id,
                 timestamp=datetime.now()

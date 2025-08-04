@@ -1,6 +1,7 @@
 from flask import Blueprint,render_template,jsonify
 from flask_login import login_required,current_user
 from .models import User,Message
+from .encryption_manager import decrypt_message
 
 message_manager=Blueprint('message_manager',__name__)
 
@@ -22,7 +23,7 @@ def get_messages(receiver_id):
     messages_data = [{
         'sender_id': message.sender_id,
         'sender_name': User.query.filter_by(id=message.sender_id).first().first_name,
-        'message': message.content,
+        'message': decrypt_message(message.content),
         'timestamp': message.timestamp.strftime('%Y-%m-%d %H:%M:%S')
     } for message in messages]
 
