@@ -106,19 +106,21 @@ def configure_socketio(socketio):
             group_name = data.get('name')
             member_ids = data.get('members', []) # Get member IDs from frontend
 
+            # 1. Create the group object first.
             new_group = Group(name=group_name, created_by=current_user)
             
-            # Add the creator to the group
+            # 2. Add it to the session immediately.
+            db.session.add(new_group)
+            
+            # 3. Now you can safely add members.
             new_group.members.append(current_user)
-
-            # Find and add the selected friends to the group
             if member_ids:
                 members_to_add = User.query.filter(User.id.in_(member_ids)).all()
                 for member in members_to_add:
                     if member not in new_group.members:
                         new_group.members.append(member)
-
-            db.session.add(new_group)
+            
+            # 4. Commit everything at the end.
             db.session.commit()
 
             # Notify ALL members of the new group so their UI updates
@@ -141,7 +143,7 @@ def configure_socketio(socketio):
                 messages = GroupMessage.query.filter_by(group_id=group_id).order_by(GroupMessage.timestamp).all()
                 messages_data = [{
                     'sender': msg.sender.first_name,
-                    'content': msg.content,
+                    'content': decrypt_message(msg.content),
                     'sender_id': msg.sender_id,
                     'timestamp': msg.timestamp.strftime('%Y-%m-%d %H:%M:%S')
                 } for msg in messages]
@@ -158,8 +160,10 @@ def configure_socketio(socketio):
             group = Group.query.get(group_id)
 
             if group and current_user in group.members:
+                encrypted_content = encrypt_message(content)
+
                 new_message = GroupMessage(
-                    content=content,
+                    content=encrypted_content,
                     group_id=group_id,
                     sender_id=current_user.id
                 )
